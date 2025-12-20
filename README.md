@@ -32,6 +32,8 @@ On Windows with `gcc` (MinGW) or Linux:
 
 gcc simpletron-vm/simpletron.c -o simpletron
 
+```
+
 
 
 \## Running
@@ -42,6 +44,8 @@ gcc simpletron-vm/simpletron.c -o simpletron
 
 ./simpletron
 
+```
+
 
 
 On Windows:
@@ -51,19 +55,20 @@ On Windows:
 
 simpletrone.exe
 
+```
+
 
 
 \## Features
 
-Reads and executes instructions in memory
 
 
 
-Simple fetch-decode-execute cycle
+\- Reads and executes instructions in memory
 
+\- Simple fetch-decode-execute cycle
 
-
-Handles basic numeric input/output
+\- Handles basic numeric input/output
 
 
 
@@ -72,5 +77,3 @@ Handles basic numeric input/output
 
 
 Stefano Caiula (steve-caiula)
-
-
