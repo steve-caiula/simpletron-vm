@@ -88,33 +88,34 @@ void welcomeToSimpletron (void)
 void enterCode (int memory[], Registers *cpu)
 {
     int scanResult;
+    int tempValue;
 
     while (1)
     {
         printf ("%02d ? ", cpu->instructionCounter);
-        scanResult = scanf ("%d", &memory[cpu->instructionCounter]);
+        scanResult = scanf ("%d", &tempValue);
 
-        if (memory[cpu->instructionCounter] != -99999 && (scanResult != 1 || memory[cpu->instructionCounter] < -9999 || memory[cpu->instructionCounter] > 9999))
+        if (tempValue != -99999 && (tempValue < -9999 || tempValue > 9999))
         {
             puts("***You entered an invalid value. Retry.     ***");
             clearInputBuffer();
+            continue;
         }
 
-        else if (memory[cpu->instructionCounter] == -99999)
+        else if (tempValue == -99999)
         {
             break;
         }    
 
-        else
-        {
-            cpu->instructionCounter++;
+        memory[cpu->instructionCounter] = tempValue; 
+        cpu->instructionCounter++;
 
-            if (cpu->instructionCounter >= MEMORY_SIZE)
-            {
-                puts ("***Memory overflow: program too large for Simpletron***");
-                return;
-            }   
-        }    
+        if (cpu->instructionCounter >= MEMORY_SIZE)
+        {
+            puts ("***Memory overflow: program too large for Simpletron***");
+            return;
+        }   
+          
     }   
 }
 
@@ -126,47 +127,44 @@ void clearInputBuffer (void)
 
 void dump (int memory[], Registers *cpu)
 {
-    printf (
-        "%s\n%-26s%+04d\n%-26s%02d\n%-26s%+04d\n%-26s%02d\n%-26s%02d\n\n",
-        "REGISTERS:",
-        "accumulator", cpu->accumulator,
-        "instructionCounter", cpu->instructionCounter,
-        "instructionRegister", cpu->instructionRegister,
-        "operationCode", cpu->operationCode,
-        "operand", cpu->operand
-    );
+    printf("\n%s\n", "REGISTERS:");
+    printf("%-24s%+05d\n", "accumulator", cpu->accumulator);
+    printf("%-24s   %02d\n", "instructionCounter", cpu->instructionCounter);
+    printf("%-24s%+05d\n", "instructionRegister", cpu->instructionRegister);
+    printf("%-24s   %02d\n", "operationCode", cpu->operationCode);
+    printf("%-24s   %02d\n", "operand", cpu->operand);
 
-    printf ("%s", "MEMORY:\n    ");
-    
-    for (size_t i = 0; i < 10; i++)
+    puts("\nMEMORY:");
+
+    printf("%3s", ""); 
+    for (int i = 0; i < 10; i++)
     {
-        printf ("%4d  ", i);
-
-        if (i == 9)
-        {
-            puts ("");
-        }    
+        printf("%5d ", i); 
     }
-    
-    for (size_t x = 0; x < MEMORY_SIZE; x++)
+    puts("");
+
+    for (int x = 0; x < MEMORY_SIZE; x++)
     {
         if (x % 10 == 0)
         {
-            printf ("%02d  ", x);
+            printf("%02d ", x);
         }
-        
-        printf ("%+04d  ", memory[x]);
 
-        if (x == 9)
+        printf("%+05d ", memory[x]); 
+
+        if ((x + 1) % 10 == 0)
         {
-            puts ("");
-        }    
-    }    
+            puts("");
+        }
+    }
 }
 
 void runCode (int memory[], Registers *cpu)
 {
     bool continueRun = true;
+
+    puts("\n*** Program loading completed ***");
+    puts("*** Program execution begins  ***\n");
     
     if (cpu->instructionCounter >= MEMORY_SIZE)
     {
@@ -261,13 +259,14 @@ void execute (int memory[], Registers *cpu, bool *continueRun)
 void read (int memory[], Registers *cpu)
 {
     int scanResult;
+    int tempValue;
 
     while (1)
     {
-        printf ("%02d ? ", cpu->operand);
-        scanResult = scanf ("%d", &memory[cpu->operand]);
+        printf ("READ %02d ? ", cpu->operand);
+        scanResult = scanf ("%d", &tempValue);
 
-        if (scanResult != 1 || memory[cpu->operand] < -9999 || memory[cpu->operand]> 9999)
+        if (scanResult != 1 || tempValue < -9999 || tempValue > 9999)
         {
             puts("***You entered an invalid value. Retry.     ***");
             clearInputBuffer();
@@ -275,6 +274,7 @@ void read (int memory[], Registers *cpu)
 
         else
         {
+            memory[cpu->operand] = tempValue;
             cpu->instructionCounter++;
             break;
         }    
@@ -283,7 +283,7 @@ void read (int memory[], Registers *cpu)
 
 void write (int memory[], Registers *cpu)
 {
-    printf ("%02d : %+04d\n", cpu->operand, memory[cpu->operand]);
+    printf ("WRITE %02d : %+05d\n", cpu->operand, memory[cpu->operand]);
     cpu->instructionCounter++;
 }
 
@@ -366,6 +366,11 @@ void branchNeg (int memory[], Registers *cpu)
     {
         branch (memory, cpu);
     }
+
+    else
+    {
+        cpu->instructionCounter++;
+    }    
 }
 
 void branchZero (int memory[], Registers *cpu)
@@ -374,6 +379,11 @@ void branchZero (int memory[], Registers *cpu)
     {
         branch (memory, cpu);
     }
+
+    else
+    {
+        cpu->instructionCounter++;
+    }    
 }
 
 void halt (int memory[], Registers *cpu, bool *continueRun)
