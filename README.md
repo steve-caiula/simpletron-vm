@@ -63,6 +63,6 @@ The simulator includes built-in safety checks for:
 * **Division by Zero:** The program will terminate if a division by zero is attempted.
 * **Overflows:** Calculation results exceeding the 4-digit limit will stop execution.
 
-## Author
+## 👤 Author
 
 Stefano Caiula (steve-caiula)
