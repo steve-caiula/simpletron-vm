@@ -15,7 +15,8 @@
 #define ADD 30
 #define SUBTRACT 31
 #define DIVIDE 32
-#define MULTIPLY 33
+#define REMINDER 33
+#define MULTIPLY 34
 
 // Control transfer operations
 #define BRANCH 40
@@ -27,7 +28,7 @@
 #define MEMORY_SIZE 100
 
 // Registers
-typedef struct
+typedef struct Registers
 {
     int accumulator;
     int instructionCounter;
@@ -38,24 +39,25 @@ typedef struct
     
 // Functions
 void welcomeToSimpletron (void);
-void enterCode (int memory[], Registers *cpu);
+void enterCode (int instructionMemory[], Registers *cpu);
 void clearInputBuffer (void);
-void dump (int memory[], Registers *cpu);
-void runCode (int memory[], Registers *cpu);
-void fetchAndDecode (int memory[], Registers *cpu);
-void execute (int memory[], Registers *cpu, bool *continueRun);
-void read (int memory[], Registers *cpu);
-void write (int memory[], Registers *cpu);
-void load (int memory[], Registers *cpu);
-void store (int memory[], Registers *cpu);
-void add (int memory[], Registers *cpu, bool *continueRun);
-void subtract (int memory[], Registers *cpu, bool *continueRun);
-void divide (int memory[], Registers *cpu, bool *continueRun);
-void multiply (int memory[], Registers *cpu, bool *continueRun);
-void branch (int memory[], Registers *cpu);
-void branchNeg (int memory[], Registers *cpu);
-void branchZero (int memory[], Registers *cpu);
-void halt (int memory[], Registers *cpu, bool *continueRun);
+void dump (int instructionMemory[], int dataMemory[], Registers *cpu);
+void runCode (int instructionMemory[], int dataMemory[], Registers *cpu);
+void fetchAndDecode (int instructionMemory[], int dataMemory[], Registers *cpu);
+void execute (int instructionMemory[], int dataMemory[], Registers *cpu, bool *continueRun);
+void read (int dataMemory[], Registers *cpu);
+void write (int dataMemory[], Registers *cpu);
+void load (int dataMemory[], Registers *cpu);
+void store (int dataMemory[], Registers *cpu);
+void add (int dataMemory[], Registers *cpu, bool *continueRun);
+void subtract (int dataMemory[], Registers *cpu, bool *continueRun);
+void divide (int dataMemory[], Registers *cpu, bool *continueRun);
+void remainderSimpletron (int dataMemory[], Registers *cpu, bool *continueRun);
+void multiply (int dataMemory[], Registers *cpu, bool *continueRun);
+void branch (Registers *cpu);
+void branchNeg (Registers *cpu);
+void branchZero (Registers *cpu);
+void halt (int instructionMemory[], int dataMemory[], Registers *cpu, bool *continueRun);
 
 int main (void)
 {
@@ -63,11 +65,12 @@ int main (void)
     Registers cpu = {0};
 
     // Memory
-    int memory[MEMORY_SIZE] = {0};
+    int instructionMemory[MEMORY_SIZE] = {0};
+    int dataMemory[MEMORY_SIZE] = {0};
 
     welcomeToSimpletron ();
-    enterCode (memory, &cpu);
-    runCode (memory, &cpu);
+    enterCode (instructionMemory, &cpu);
+    runCode (instructionMemory, dataMemory, &cpu);
 }
 
 void welcomeToSimpletron (void)
@@ -85,7 +88,7 @@ void welcomeToSimpletron (void)
     );
 }
 
-void enterCode (int memory[], Registers *cpu)
+void enterCode (int instructionMemory[], Registers *cpu)
 {
     int scanResult;
     int tempValue;
@@ -97,7 +100,7 @@ void enterCode (int memory[], Registers *cpu)
 
         if (tempValue != -99999 && (tempValue < -9999 || tempValue > 9999))
         {
-            puts("***You entered an invalid value. Retry.     ***");
+            puts("***   You entered an invalid value. Retry.     ***");
             clearInputBuffer();
             continue;
         }
@@ -107,12 +110,12 @@ void enterCode (int memory[], Registers *cpu)
             break;
         }    
 
-        memory[cpu->instructionCounter] = tempValue; 
+        instructionMemory[cpu->instructionCounter] = tempValue; 
         cpu->instructionCounter++;
 
         if (cpu->instructionCounter >= MEMORY_SIZE)
         {
-            puts ("***Memory overflow: program too large for Simpletron***");
+            puts ("*** Memory overflow: program too large for Simpletron ***");
             return;
         }   
           
@@ -125,7 +128,7 @@ void clearInputBuffer (void)
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-void dump (int memory[], Registers *cpu)
+void dump (int instructionMemory[], int dataMemory[], Registers *cpu)
 {
     printf("\n%s\n", "REGISTERS:");
     printf("%-24s%+05d\n", "accumulator", cpu->accumulator);
@@ -134,7 +137,7 @@ void dump (int memory[], Registers *cpu)
     printf("%-24s   %02d\n", "operationCode", cpu->operationCode);
     printf("%-24s   %02d\n", "operand", cpu->operand);
 
-    puts("\nMEMORY:");
+    puts("\nINSTRUCTION MEMORY:");
 
     printf("%3s", ""); 
     for (int i = 0; i < 10; i++)
@@ -150,7 +153,31 @@ void dump (int memory[], Registers *cpu)
             printf("%02d ", x);
         }
 
-        printf("%+05d ", memory[x]); 
+        printf("%+05d ", instructionMemory[x]); 
+
+        if ((x + 1) % 10 == 0)
+        {
+            puts("");
+        }
+    }
+
+    puts("\nDATA MEMORY:");
+
+    printf("%3s", ""); 
+    for (int i = 0; i < 10; i++)
+    {
+        printf("%5d ", i); 
+    }
+    puts("");
+
+    for (int x = 0; x < MEMORY_SIZE; x++)
+    {
+        if (x % 10 == 0)
+        {
+            printf("%02d ", x);
+        }
+
+        printf("%+05d ", dataMemory[x]); 
 
         if ((x + 1) % 10 == 0)
         {
@@ -159,7 +186,7 @@ void dump (int memory[], Registers *cpu)
     }
 }
 
-void runCode (int memory[], Registers *cpu)
+void runCode (int instructionMemory[], int dataMemory[], Registers *cpu)
 {
     bool continueRun = true;
 
@@ -175,79 +202,83 @@ void runCode (int memory[], Registers *cpu)
 
     do
     {
-        fetchAndDecode (memory, cpu);
+        fetchAndDecode (instructionMemory, dataMemory, cpu);
 
         if (continueRun == true)
         {
-            execute (memory, cpu, &continueRun);
+            execute (instructionMemory, dataMemory, cpu, &continueRun);
         }
         
         else
         {
             puts ("\n*** Simpletron execution abnormally terminated ***\n");
-            dump (memory, cpu);
+            dump (instructionMemory, dataMemory, cpu);
             break;
         }    
     } while (continueRun == true);
 }
 
-void fetchAndDecode (int memory[], Registers *cpu)
+void fetchAndDecode (int instructionMemory[], int dataMemory[], Registers *cpu)
 {
-    cpu->instructionRegister = memory[cpu->instructionCounter];
+    cpu->instructionRegister = instructionMemory[cpu->instructionCounter];
     cpu->operationCode = cpu->instructionRegister / 100;
     cpu->operand = cpu->instructionRegister % 100;
 }
 
-void execute (int memory[], Registers *cpu, bool *continueRun)
+void execute (int instructionMemory[], int dataMemory[], Registers *cpu, bool *continueRun)
 {
     switch (cpu->operationCode)
     {
     case READ:
-        read (memory, cpu);
+        read (dataMemory, cpu);
         break;
     
     case WRITE:
-        write (memory, cpu);
+        write (dataMemory, cpu);
         break;
 
     case LOAD:
-        load (memory, cpu);
+        load (dataMemory, cpu);
         break;
 
     case STORE:
-        store (memory, cpu);
+        store (dataMemory, cpu);
         break;
 
     case ADD:
-        add (memory, cpu, continueRun);
+        add (dataMemory, cpu, continueRun);
         break;
 
     case SUBTRACT:
-        subtract (memory, cpu, continueRun);
+        subtract (dataMemory, cpu, continueRun);
         break;
 
     case DIVIDE:
-        divide (memory, cpu, continueRun);
+        divide (dataMemory, cpu, continueRun);
+        break;
+
+    case REMINDER:
+        remainderSimpletron (dataMemory, cpu, continueRun);
         break;
 
     case MULTIPLY:
-        multiply (memory, cpu, continueRun);
+        multiply (dataMemory, cpu, continueRun);
         break;
 
     case BRANCH:
-        branch (memory, cpu);
+        branch (cpu);
         break;
 
     case BRANCHNEG:
-        branchNeg (memory, cpu);
+        branchNeg (cpu);
         break;
 
     case BRANCHZERO:
-        branchZero (memory, cpu);
+        branchZero (cpu);
         break;
 
     case HALT:
-        halt (memory, cpu, continueRun);
+        halt (instructionMemory, dataMemory, cpu, continueRun);
         break;
 
     default:
@@ -256,7 +287,7 @@ void execute (int memory[], Registers *cpu, bool *continueRun)
     }
 }
 
-void read (int memory[], Registers *cpu)
+void read (int dataMemory[], Registers *cpu)
 {
     int scanResult;
     int tempValue;
@@ -268,103 +299,117 @@ void read (int memory[], Registers *cpu)
 
         if (scanResult != 1 || tempValue < -9999 || tempValue > 9999)
         {
-            puts("***You entered an invalid value. Retry.     ***");
+            puts("***   You entered an invalid value. Retry.     ***");
             clearInputBuffer();
         }
 
         else
         {
-            memory[cpu->operand] = tempValue;
+            dataMemory[cpu->operand] = tempValue;
             cpu->instructionCounter++;
             break;
         }    
     }
 }
 
-void write (int memory[], Registers *cpu)
+void write (int dataMemory[], Registers *cpu)
 {
-    printf ("WRITE %02d : %+05d\n", cpu->operand, memory[cpu->operand]);
+    printf ("WRITE %02d : %+05d\n", cpu->operand, dataMemory[cpu->operand]);
     cpu->instructionCounter++;
 }
 
-void load (int memory[], Registers *cpu)
+void load (int dataMemory[], Registers *cpu)
 {
-    cpu->accumulator = memory[cpu->operand];
+    cpu->accumulator = dataMemory[cpu->operand];
     cpu->instructionCounter++;
 }
 
-void store (int memory[], Registers *cpu)
+void store (int dataMemory[], Registers *cpu)
 {
-    memory[cpu->operand] = cpu->accumulator;
+    dataMemory[cpu->operand] = cpu->accumulator;
     cpu->instructionCounter++;
 }
 
-void add (int memory[], Registers *cpu, bool *continueRun)
+void add (int dataMemory[], Registers *cpu, bool *continueRun)
 {
-    if ((cpu->accumulator + memory[cpu->operand] < -9999) || (cpu->accumulator + memory[cpu->operand] > 9999))
+    if ((cpu->accumulator + dataMemory[cpu->operand] < -9999) || (cpu->accumulator + dataMemory[cpu->operand] > 9999))
     {
         *continueRun = false;
     }
     
     else
     {
-        cpu->accumulator += memory[cpu->operand];
+        cpu->accumulator += dataMemory[cpu->operand];
         cpu->instructionCounter++;
     }   
 }
 
-void subtract (int memory[], Registers *cpu, bool *continueRun)
+void subtract (int dataMemory[], Registers *cpu, bool *continueRun)
 {
-    if ((cpu->accumulator - memory[cpu->operand] < -9999) || (cpu->accumulator - memory[cpu->operand] > 9999))
+    if ((cpu->accumulator - dataMemory[cpu->operand] < -9999) || (cpu->accumulator - dataMemory[cpu->operand] > 9999))
     {
         *continueRun = false;
     }
     
     else
     {
-        cpu->accumulator -= memory[cpu->operand];
+        cpu->accumulator -= dataMemory[cpu->operand];
         cpu->instructionCounter++;
     }   
 }
 
-void divide (int memory[], Registers *cpu, bool *continueRun)
+void divide (int dataMemory[], Registers *cpu, bool *continueRun)
 {
-    if (memory[cpu->operand] == 0)
+    if (dataMemory[cpu->operand] == 0)
     {
         *continueRun = false;
     }
     
     else
     {
-        cpu->accumulator /= memory[cpu->operand];
+        cpu->accumulator /= dataMemory[cpu->operand];
         cpu->instructionCounter++;
     }   
 }
 
-void multiply (int memory[], Registers *cpu, bool *continueRun)
+void remainderSimpletron (int dataMemory[], Registers *cpu, bool *continueRun)
 {
-    if ((cpu->accumulator * memory[cpu->operand] < -9999) || (cpu->accumulator * memory[cpu->operand] > 9999))
+    if (dataMemory[cpu->operand] == 0)
     {
         *continueRun = false;
     }
     
     else
     {
-        cpu->accumulator *= memory[cpu->operand];
+        cpu->accumulator %= dataMemory[cpu->operand];
         cpu->instructionCounter++;
     }   
 }
 
-void branch (int memory[], Registers *cpu)
+void multiply (int dataMemory[], Registers *cpu, bool *continueRun)
+{
+    if ((cpu->accumulator * dataMemory[cpu->operand] < -9999) || (cpu->accumulator * dataMemory[cpu->operand] > 9999))
+    {
+        *continueRun = false;
+    }
+    
+    else
+    {
+        cpu->accumulator *= dataMemory[cpu->operand];
+        cpu->instructionCounter++;
+    }   
+}
+
+void branch (Registers *cpu)
 {
     cpu->instructionCounter = cpu->operand;
 }
 
-void branchNeg (int memory[], Registers *cpu)
+void branchNeg (Registers *cpu)
 {
     if (cpu->accumulator < 0)
     {
-        branch (memory, cpu);
+        branch (cpu);
     }
 
     else
@@ -373,11 +418,11 @@ void branchNeg (int memory[], Registers *cpu)
     }    
 }
 
-void branchZero (int memory[], Registers *cpu)
+void branchZero (Registers *cpu)
 {
     if (cpu->accumulator == 0)
     {
-        branch (memory, cpu);
+        branch (cpu);
     }
 
     else
@@ -386,9 +431,9 @@ void branchZero (int memory[], Registers *cpu)
     }    
 }
 
-void halt (int memory[], Registers *cpu, bool *continueRun)
+void halt (int instructionMemory[], int dataMemory[], Registers *cpu, bool *continueRun)
 {
     puts ("\n*** Simpletron execution terminated ***\n");
     *continueRun = false;
-    dump (memory, cpu);
+    dump (instructionMemory, dataMemory, cpu);
 }
