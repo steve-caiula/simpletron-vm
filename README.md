@@ -1,21 +1,21 @@
 # Simpletron Virtual Machine
 
-A software simulation of the **Simpletron** computer, a simple yet powerful CPU that operates in **Simpletron Machine Language (SML)**. This project is written in C and simulates a computer's internal registers, memory, and execution cycle.
+A software simulation of the **Simpletron** computer, a simple CPU that operates in **Simpletron Machine Language (SML)**. This project is written in C and simulates a computer's internal registers, memory, and execution cycle.
 
 
 
-## 🚀 Overview
+## Overview
 The Simpletron executes programs written in a decimal-based machine language. Each instruction is a **4-digit signed integer** (e.g., `+1007`):
 * **First two digits:** Operation Code (The action to perform).
 * **Last two digits:** Operand (The memory address/location).
 
-## 🛠️ System Architecture
+## System Architecture
 * **Memory:** 100 words (addressed 00 to 99).
 * **Accumulator:** A special register where all calculations and data transfers are processed.
 * **Instruction Counter:** Tracks the location of the next instruction to execute.
 * **Instruction Register:** Holds the current instruction being processed.
 
-## 📖 SML Instruction Set
+## SML Instruction Set
 
 | Category | Operation | Code | Description |
 | :--- | :--- | :--- | :--- |
@@ -32,7 +32,7 @@ The Simpletron executes programs written in a decimal-based machine language. Ea
 | | `BRANCHZERO` | **42** | Jump if the Accumulator is zero. |
 | | `HALT` | **43** | Terminate the program execution. |
 
-## 💻 Example Program
+## Example Program
 This program reads two integers from the user, sums them, and displays the result:
 
 | Location | Instruction | Description |
@@ -45,7 +45,7 @@ This program reads two integers from the user, sums them, and displays the resul
 | **05** | `1109` | Print value from address 09 |
 | **06** | `4300` | Halt execution |
 
-## 🔧 Installation and Usage
+## Installation and Usage
 1.  **Compile the source code:**
     ```bash
     gcc simpletron.c -o simpletron
@@ -57,12 +57,11 @@ This program reads two integers from the user, sums them, and displays the resul
 3.  **Enter your SML code** one instruction at a time.
 4.  Type `-99999` to finish loading and start the execution.
 
-## ⚠️ Error Handling
+## Error Handling
 The simulator includes built-in safety checks for:
 * **Invalid values:** Inputs must be between -9999 and +9999.
 * **Division by Zero:** The program will terminate if a division by zero is attempted.
 * **Overflows:** Calculation results exceeding the 4-digit limit will stop execution.
 
-## 👤 Author
-
+## Author
 Stefano Caiula (steve-caiula)
