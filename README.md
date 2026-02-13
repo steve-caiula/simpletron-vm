@@ -1,13 +1,13 @@
 # Simpletron Virtual Machine
 
-A software simulation of the **Simpletron** computer, a simple yet powerful CPU that operates in **Simpletron Machine Language (SML)**. This project is written in C and simulates a computer's internal registers, memory, and execution cycle.
+A software simulation of the **Simpletron** computer, a simple CPU that operates in **Simpletron Machine Language (SML)**. This project is written in C and simulates a computer's internal registers, memory, and execution cycle.
 
-## 🚀 Overview
+## Overview
 The Simpletron executes programs written in a decimal-based machine language. Each instruction is a **4-digit signed integer** (e.g., `+1007`):
 * **First two digits:** Operation Code (The action to perform).
 * **Last two digits:** Operand (The memory address/location).
 
-## 🛠️ System Architecture (Harvard Architecture)
+## System Architecture (Harvard Architecture)
 This version of Simpletron implements a **Harvard Architecture**, featuring separate memory spaces for code and data to ensure system stability and prevent instruction overwriting.
 
 * **Instruction Memory:** 100 words (addressed 00 to 99) dedicated exclusively to SML instructions.
@@ -16,7 +16,7 @@ This version of Simpletron implements a **Harvard Architecture**, featuring sepa
 * **Instruction Counter:** Tracks the location of the next instruction to execute in the Instruction Memory.
 * **Instruction Register:** Holds the current instruction being processed.
 
-## 📖 SML Instruction Set
+## SML Instruction Set
 
 | Category | Operation | Code | Description |
 | :--- | :--- | :--- | :--- |
@@ -47,7 +47,7 @@ This program reads two integers, calculates the remainder of their division, and
 | **05** | `1109` | Print value from Data Memory 09 |
 | **06** | `4300` | Halt execution |
 
-## 🔧 Installation and Usage
+## Installation and Usage
 1.  **Compile the source code:**
     ```bash
     gcc simpletron.c -o simpletron
@@ -59,12 +59,11 @@ This program reads two integers, calculates the remainder of their division, and
 3.  **Enter your SML code** one instruction at a time.
 4.  Type `-99999` to finish loading and start the execution.
 
-## ⚠️ Error Handling
+## Error Handling
 The simulator includes built-in safety checks for:
 * **Invalid values:** Inputs must be between -9999 and +9999.
 * **Division by Zero:** The program will terminate if a division or remainder by zero is attempted.
 * **Overflows:** Calculation results exceeding the 4-digit limit will stop execution.
 
-## 👤 Author
-
+## Author
 Stefano Caiula (steve-caiula)
